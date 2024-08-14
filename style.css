@@ -64,6 +64,11 @@ img {
     h2 {
         font-size: 1.2em;
     }
+
+    header {
+        width: 100%;
+        padding: ;
+    }
     .container {
         width: 100%;
         padding: 0 10px;
