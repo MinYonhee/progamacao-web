@@ -1,104 +1,126 @@
 const palavras = [
-    "abacaxi", "anel", "amigo", "ave", "abacate",
-    "bola", "bala", "banho", "bau", "banco",
-    "casa", "cachorro", "carro", "cafe", "cama",
-    "dado", "dedo", "doce", "dia", "dente",
-    "elefante", "estrela", "escola", "elo", "escada",
-    "faca", "festa", "fogo", "foca", "fada",
-    "gato", "galo", "gelo", "goma", "ganso",
-    "helicoptero", "hipopotamo", "hotel", "harpa", "horta",
-    "ilha", "iglu", "iris", "indio", "ima",
-    "janela", "jarra", "jogo", "jumento", "joaninha",
-    "ketchup", "kiwi", "karate", "koala", "kamikaze",
-    "leao", "lago", "lua", "lima", "livro",
-    "maca", "mala", "muro", "mapa", "mesa",
-    "neve", "ninho", "navio", "nuvem", "nota",
-    "olho", "ovo", "onda", "ouro", "orelha",
-    "pato", "peixe", "pipoca", "pato", "perna",
-    "quilo", "quadro", "queijo", "quina", "queda",
-    "raio", "rosa", "rede", "rato", "roupa",
-    "sol", "sapo", "seda", "sabao", "sapato",
-    "tigre", "touro", "teto", "tela", "tesoura",
-    "uva", "urso", "urna", "uniao", "umidade",
-    "vaca", "verao", "vento", "vela", "vidro",
-    "webcam", "whisky", "waffle", "walker", "wifi",
-    "xale", "xadrez", "xerox", "xarope", "xampu",
-    "yoga", "yakisoba", "yogurte", "yeti", "yuppie",
-    "zebra", "zoologico", "zumbi", "zero", "zagueiro"
+    "abacaxi", "anel", "amigo", "bola", "carro", "dado", "elefante",
+    "fogo", "gato", "hotel", "ilha", "janela", "kiwi", "lua", "mala",
+    "neve", "olho", "pato", "quadro", "raio", "sol", "tigre", "uva",
+    "vaca", "webcam", "xale", "yogurte", "zebra", "verão", "tigre", "vela",  
+    "sol", "sapo", "seda", "sabao", "sapato", "raio", "rosa", "rede", "rato", "roupa",
+    "pato", "peixe", "pipoca", "pato", "perna",  "pato", "peixe", "pipoca", "pato", "perna",
+    "leao", "lago", "lua", "lima", "livro",  "gato", "galo", "gelo", "goma", "ganso",
 ];
 
-let palavra;
-let letrasErradas = 0;
-const MAX_ERROS = 6;
+let palavraSecreta = '';
+let letrasAdivinhadas = [];
+let tentativas = 0;
+const maxTentativas = 6;
 
 function iniciarJogo() {
-    const palavraIndex = Math.floor(Math.random() * palavras.length);
-    palavra = palavras[palavraIndex];
-    letrasErradas = 0;
+    palavraSecreta = palavras[Math.floor(Math.random() * palavras.length)];
+    letrasAdivinhadas = Array(palavraSecreta.length).fill('_');
+    tentativas = 0;
 
-    atualizarPalavra();
-    criarBotõesAlfabeto();
-    atualizarForca();
+    exibirPalavra();
+    criarBotoesLetras();
+    limparCanvas();
 }
 
-function atualizarPalavra() {
-    const wordContainer = document.getElementById('wordContainer');
-    wordContainer.innerHTML = '';
-    for (let letter of palavra) {
-        const span = document.createElement('span');
-        span.textContent = '_';
-        span.className = 'letter';
-        span.dataset.letter = letter;
-        wordContainer.appendChild(span);
-    }
+function exibirPalavra() {
+    const palavraDiv = document.getElementById('palavra');
+    palavraDiv.textContent = letrasAdivinhadas.join(' ');
 }
 
-function criarBotõesAlfabeto() {
-    const alphabetButtons = document.getElementById('alphabetButtons');
-    alphabetButtons.innerHTML = '';
-    for (let i = 65; i <= 90; i++) {
-        const button = document.createElement('button');
-        button.textContent = String.fromCharCode(i);
-        button.onclick = () => verificarLetra(button.textContent.toLowerCase());
-        alphabetButtons.appendChild(button);
-    }
-}
+function criarBotoesLetras() {
+    const letrasDiv = document.getElementById('letras');
+    letrasDiv.innerHTML = ''; 
 
-function verificarLetra(letra) {
-    let acertou = false;
-    document.querySelectorAll('#wordContainer .letter').forEach(span => {
-        if (span.dataset.letter === letra) {
-            span.textContent = letra;
-            acertou = true;
-        }
+    const alfabeto = 'abcdefghijklmnopqrstuvwxyz'.split('');
+    alfabeto.forEach(letra => {
+        const botao = document.createElement('button');
+        botao.textContent = letra;
+        botao.onclick = () => verificarLetra(letra, botao);
+        letrasDiv.appendChild(botao);
     });
-
-    if (!acertou) {
-        letrasErradas++;
-        atualizarForca();
-    }
-
-    if (letrasErradas >= MAX_ERROS) {
-        alert('Você perdeu! A palavra era: ' + palavra);
-        iniciarJogo();
-    } else if (document.querySelectorAll('#wordContainer .letter').length === document.querySelectorAll('#wordContainer .letter:not([data-letter])').length) {
-        alert('Você ganhou!');
-        iniciarJogo();
-    }
 }
 
-function atualizarForca() {
-    const hangmanContainer = document.getElementById('hangmanContainer');
-    hangmanContainer.innerHTML = '';
-    for (let i = 1; i <= MAX_ERROS; i++) {
-        const div = document.createElement('div');
-        div.className = 'hangmanPart';
-        if (i <= letrasErradas) {
-            div.classList.add('active');
+function verificarLetra(letra, botao) {
+    botao.disabled = true; 
+
+    if (palavraSecreta.includes(letra)) {
+        for (let i = 0; i < palavraSecreta.length; i++) {
+            if (palavraSecreta[i] === letra) {
+                letrasAdivinhadas[i] = letra;
+            }
         }
-        hangmanContainer.appendChild(div);
+        exibirPalavra();
+
+        if (!letrasAdivinhadas.includes('_')) {
+            alert('Parabéns, você venceu!');
+            iniciarJogo();
+        }
+    } else {
+        tentativas++;
+        desenharBoneco(tentativas);
+
+        if (tentativas === maxTentativas) {
+            alert('Você perdeu! A palavra era: ' + palavraSecreta);
+            iniciarJogo();
+        }
     }
 }
 
-// Iniciar o jogo ao carregar a página
+function desenharBoneco(tentativa) {
+    const canvas = document.getElementById('forcaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    switch (tentativa) {
+        case 1: 
+            ctx.beginPath();
+            ctx.moveTo(10, 180);
+            ctx.lineTo(100, 180);
+            ctx.moveTo(50, 180);
+            ctx.lineTo(50, 30);
+            ctx.lineTo(150, 30);
+            ctx.lineTo(150, 50);
+            ctx.stroke();
+            break;
+        case 2: 
+            ctx.beginPath();
+            ctx.arc(150, 70, 20, 0, Math.PI * 2);
+            ctx.stroke();
+            break;
+        case 3: 
+            ctx.beginPath();
+            ctx.moveTo(150, 90);
+            ctx.lineTo(150, 140);
+            ctx.stroke();
+            break;
+        case 4: 
+            ctx.beginPath();
+            ctx.moveTo(150, 100);
+            ctx.lineTo(130, 120);
+            ctx.stroke();
+            break;
+        case 5: 
+            ctx.beginPath();
+            ctx.moveTo(150, 100);
+            ctx.lineTo(170, 120);
+            ctx.stroke();
+            break;
+        case 6: 
+            ctx.beginPath();
+            ctx.moveTo(150, 140);
+            ctx.lineTo(130, 170);
+            ctx.moveTo(150, 140);
+            ctx.lineTo(170, 170);
+            ctx.stroke();
+            break;
+    }
+}
+
+function limparCanvas() {
+    const canvas = document.getElementById('forcaCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height); 
+}
+
+
 window.onload = iniciarJogo;
