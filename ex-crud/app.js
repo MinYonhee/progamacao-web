@@ -1,88 +1,148 @@
-const APP_ID = 'oiyoEAMYPe2DuC34amnM2Bdl4Tt0hHWMDQc2u3Uv'; 
-const REST_API_KEY = 'dvcYWwoQEAfrhN1Ud3U8tON4i4UohibIITINvFS6'; 
-const SERVER_URL = 'https://parseapi.back4app.com'; 
+let listaDespesas = document.getElementById('listaDespesas');
+let inputSomatorio = document.getElementById('inputSomatorio');
 
+const headers = {
+    "X-Parse-Application-Id": "oiyoEAMYPe2DuC34amnM2Bdl4Tt0hHWMDQc2u3Uv",
+    "X-Parse-REST-API-Key": "dvcYWwoQEAfrhN1Ud3U8tON4i4UohibIITINvFS6",
+    "Content-Type": "application/json"
+};
 
-Parse.initialize(APP_ID, REST_API_KEY);
-Parse.serverURL = SERVER_URL;
-
-async function createDespesa(descricao, valor) {
+const pegarDespesas = async () => {
     try {
-        const response = await fetch(`${SERVER_URL}/classes/Despesas`, {
+        const resposta = await fetch("https://parseapi.back4app.com/classes/Despesa", {
+            method: 'GET',
+            headers: headers
+        })
+
+        if (resposta.ok) {
+            listaDespesas.innerHTML = "";
+            let respostaEmJson = await resposta.json();
+    
+            respostaEmJson.results.forEach(despesa => {
+                let novaDespesa = document.createElement('li');
+                let inputValorDespesa = document.createElement('input');
+                let botaoEditar = document.createElement('button');
+                let botaoDeletar = document.createElement('button');
+                let botaoSalvarEdicao = document.createElement('button');
+
+                inputValorDespesa.value = despesa.valor;
+                inputValorDespesa.disabled = true;
+                inputValorDespesa.id = `despesa-${despesa.objectId}`
+
+                novaDespesa.innerText = `${despesa.descricao}`;
+
+                botaoEditar.innerText = "Editar";
+                botaoEditar.id = despesa.objectId;
+                botaoEditar.onclick = alterarVisibilidadeInputDespesa;
+
+                botaoDeletar.innerText = "x";
+                botaoDeletar.id = despesa.objectId;
+                botaoDeletar.onclick = deletarDespesa;
+
+                botaoSalvarEdicao.innerText = "Salvar";
+                botaoSalvarEdicao.id = despesa.objectId;
+                botaoSalvarEdicao.onclick = editarDespesa;
+
+                listaDespesas.appendChild(novaDespesa);
+                listaDespesas.appendChild(inputValorDespesa);
+                listaDespesas.appendChild(botaoEditar);
+                listaDespesas.appendChild(botaoDeletar);
+                listaDespesas.appendChild(botaoSalvarEdicao);
+            });
+            
+            let somatorioDespesas = respostaEmJson.results.reduce((valorAtual, item) => { 
+                return valorAtual + item.valor
+            }, 0);
+    
+            inputSomatorio.value = somatorioDespesas;
+        } else {
+            throw new Error('Falha ao buscar as despesas');
+        }
+    } catch(erro) {
+        alert(erro);
+    }
+}
+
+const criarDespesa = async () => {
+    let dados = {
+        descricao: document.getElementById('descricao').value,
+        valor: Number(document.getElementById('valor').value),
+    }
+
+    try {
+        const resposta = await fetch("https://parseapi.back4app.com/classes/Despesa", {
             method: 'POST',
-            headers: {
-                'X-Parse-Application-Id': APP_ID, // Certifique-se que o APP_ID está correto
-                'X-Parse-REST-API-Key': REST_API_KEY, // Certifique-se que o REST_API_KEY está correto
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ descricao, valor }) // Dados a serem enviados
-        });
+            body: JSON.stringify(dados),
+            headers: headers
+        })
 
-        const result = await response.json();
-        console.log("Resposta da criação da despesa: ", result); // Verifica se a despesa foi criada com sucesso
-        getDespesas(); // Atualiza a lista de despesas
-    } catch (error) {
-        console.error('Erro ao criar despesa:', error);
+        if (resposta.ok) {
+            let respostaEmJson = await resposta.json();
+            alert('Despesa criada com sucesso!');
+            pegarDespesas();
+        } else {
+            throw new Error('Falha ao criar a despesa.');
+        }
+
+    } catch(erro) {
+        alert(erro);
     }
 }
 
+const alterarVisibilidadeInputDespesa = async (e) => {
+    const idDespesa = e.target.id;
+    let inputDespesa = document.getElementById(`despesa-${idDespesa}`);
+    inputDespesa.disabled = !inputDespesa.disabled;
+} 
 
-// Função para adicionar despesa
-async function adicionarDespesa(descricao, valor) {
-    const Despesa = Parse.Object.extend('Despesas');
-    const novaDespesa = new Despesa();
-
-    novaDespesa.set('descricao', descricao);
-    novaDespesa.set('valor', parseFloat(valor));
+const editarDespesa = async (e) => {
+    const idDespesa = e.target.id;
+    let inputDespesa = document.getElementById(`despesa-${idDespesa}`);
+    let dados = {
+        valor: Number(inputDespesa.value),
+    }
 
     try {
-        await novaDespesa.save();
-        listarDespesas();
-    } catch (error) {
-        console.error('Erro ao adicionar despesa:', error);
+        const resposta = await fetch(`https://parseapi.back4app.com/classes/Despesa/${idDespesa}`, {
+            method: 'PUT',
+            body: JSON.stringify(dados),
+            headers: headers
+        })
+
+        if (resposta.ok) {
+            let respostaEmJson = await resposta.json();
+            alert('Despesa editada com sucesso!');
+            pegarDespesas();
+        } else {
+            throw new Error('Falha ao editar a despesa.');
+        }
+
+    } catch(erro) {
+        alert(erro);
     }
 }
 
-// Função para atualizar o valor da despesa
-async function atualizarDespesa(id, valor) {
-    const Despesa = Parse.Object.extend('Despesas');
-    const query = new Parse.Query(Despesa);
+const deletarDespesa = async (e) => {
+    const idDespesa = e.target.id;
+    let confirmacao = confirm("Tem certeza que deseja excluir essa despesa?");
 
     try {
-        const despesa = await query.get(id);
-        despesa.set('valor', parseFloat(valor));
-        await despesa.save();
-        listarDespesas();
-    } catch (error) {
-        console.error('Erro ao atualizar despesa:', error);
+        const resposta = await fetch(`https://parseapi.back4app.com/classes/Despesa/${idDespesa}`, {
+            method: 'DELETE',
+            headers: headers
+        })
+
+        if (resposta.ok && confirmacao) {
+            let respostaEmJson = await resposta.json();
+            alert('Despesa excluída com sucesso!');
+            pegarDespesas();
+        } else {
+            throw new Error('Falha ao excluir a despesa.');
+        }
+
+    } catch(erro) {
+        alert(erro);
     }
 }
 
-// Função para deletar despesa
-async function deletarDespesa(id) {
-    const Despesa = Parse.Object.extend('Despesas');
-    const query = new Parse.Query(Despesa);
-
-    try {
-        const despesa = await query.get(id);
-        await despesa.destroy();
-        listarDespesas();
-    } catch (error) {
-        console.error('Erro ao deletar despesa:', error);
-    }
-}
-
-// Evento de submissão do formulário para criar nova despesa
-document.getElementById('despesaForm').addEventListener('submit', function (event) {
-    event.preventDefault();
-    const descricao = document.getElementById('descricao').value;
-    const valor = document.getElementById('valor').value;
-
-    if (descricao && valor) {
-        adicionarDespesa(descricao, valor);
-        document.getElementById('despesaForm').reset();
-    }
-});
-
-// Carregar despesas ao carregar a página
-listarDespesas();
+window.onload = pegarDespesas;

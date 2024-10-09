@@ -3,36 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD de Despesas</title>
-    <link rel="stylesheet" href="styles.css"> 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/parse/3.4.3/parse.min.js"></script>
+    <title>Despesas</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="app.js"></script>
 </head>
 <body>
-    <h1>Gerenciamento de Despesas</h1>
-    <form id="despesaForm">
-        <label for="descricao">Descrição:</label>
-        <input type="text" id="descricao" required>
-        
-        <label for="valor">Valor:</label>
-        <input type="number" id="valor" required>
-        
-        <button type="submit">Adicionar Despesa</button>
-    </form>
-    
-    <h2>Despesas Cadastradas</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Descrição</th>
-                <th>Valor</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="despesasTable"></tbody>
-    </table>
-    
-    <h3>Total de Despesas: R$ <span id="totalDespesas">0.00</span></h3>
+    <main>
+        <h1>Quadro de Despesas</h1>
 
-    <script src="app.js"></script> <!-- Link para o arquivo JavaScript -->
+        <div class="criarDespesa">
+            <label for="descricao">Descrição da despesa: </label>
+            <textarea id="descricao"></textarea>
+            <label for="valor">Valor da despesa: </label>
+            <textarea id="valor"></textarea>
+            <button onclick="criarDespesa()">Criar despesa</button>
+        </div>
+        <hr>
+        <ul id="listaDespesas">
+
+        </ul>
+        <div class="somatorio">
+            <h2>Somatório das depesas</h2>
+            <label for="inputSomatorio">Valor total: </label>
+            <input id="inputSomatorio" disabled>
+        </div>
+    </main>
 </body>
 </html>
